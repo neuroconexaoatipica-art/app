@@ -7,9 +7,9 @@ const OFFLINE_URL = '/';
 const PRECACHE_ASSETS = [
   '/',
   '/manifest.json',
-  '/favicon-32.png',
-  '/favicon-16.png',
-  '/apple-touch-icon.png'
+  '/favicon-32x32.png',
+  '/favicon-16x16.png',
+  '/pwa-apple-touch-180x180.png'
 ];
 
 // Install: pre-cachear shell básico
@@ -38,13 +38,19 @@ self.addEventListener('activate', (event) => {
 
 // Fetch: Network First, fallback para cache
 self.addEventListener('fetch', (event) => {
+  // Ignorar requests que não são GET
   if (event.request.method !== 'GET') return;
+
+  // Ignorar requests para Supabase API
   if (event.request.url.includes('supabase.co')) return;
+
+  // Ignorar requests para Google Fonts (deixar o browser gerenciar)
   if (event.request.url.includes('googleapis.com') || event.request.url.includes('gstatic.com')) return;
 
   event.respondWith(
     fetch(event.request)
       .then((response) => {
+        // Cachear resposta válida
         if (response.status === 200) {
           const responseClone = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
@@ -54,10 +60,12 @@ self.addEventListener('fetch', (event) => {
         return response;
       })
       .catch(() => {
+        // Offline: tentar cache
         return caches.match(event.request).then((cachedResponse) => {
           if (cachedResponse) {
             return cachedResponse;
           }
+          // Se é uma navegação, retornar o shell do app
           if (event.request.mode === 'navigate') {
             return caches.match(OFFLINE_URL);
           }

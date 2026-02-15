@@ -1,5 +1,3 @@
-const logoImg = "/logo.png";
-
 interface LogoIconProps {
   className?: string;
   size?: number;
@@ -8,11 +6,11 @@ interface LogoIconProps {
 export function LogoIcon({ className = "", size = 48 }: LogoIconProps) {
   return (
     <img
-      src={logoImg}
+      src="/logo-512x512.png"
       alt="NeuroConexão Atípica"
       width={size}
       height={size}
-      className={`rounded-xl object-cover ${className}`}
+      className={`rounded-xl object-contain ${className}`}
     />
   );
 }
