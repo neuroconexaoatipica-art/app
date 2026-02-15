@@ -1,9 +1,5 @@
-// Service Worker — NeuroConexão Atípica
-// Estratégia: Network First com fallback para cache (shell offline básico)
 const CACHE_NAME = 'neuroconexao-v1';
 const OFFLINE_URL = '/';
-
-// Assets essenciais para funcionar offline
 const PRECACHE_ASSETS = [
   '/',
   '/manifest.json',
@@ -11,66 +7,39 @@ const PRECACHE_ASSETS = [
   '/favicon-16x16.png',
   '/pwa-apple-touch-180x180.png'
 ];
-
-// Install: pre-cachear shell básico
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(PRECACHE_ASSETS);
-    })
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE_ASSETS))
   );
   self.skipWaiting();
 });
-
-// Activate: limpar caches antigos
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames
-          .filter((name) => name !== CACHE_NAME)
-          .map((name) => caches.delete(name))
-      );
-    })
+    caches.keys().then((cacheNames) =>
+      Promise.all(cacheNames.filter((n) => n !== CACHE_NAME).map((n) => caches.delete(n)))
+    )
   );
   self.clients.claim();
 });
-
-// Fetch: Network First, fallback para cache
 self.addEventListener('fetch', (event) => {
-  // Ignorar requests que não são GET
   if (event.request.method !== 'GET') return;
-
-  // Ignorar requests para Supabase API
   if (event.request.url.includes('supabase.co')) return;
-
-  // Ignorar requests para Google Fonts (deixar o browser gerenciar)
   if (event.request.url.includes('googleapis.com') || event.request.url.includes('gstatic.com')) return;
-
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // Cachear resposta válida
         if (response.status === 200) {
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseClone);
-          });
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
         }
         return response;
       })
-      .catch(() => {
-        // Offline: tentar cache
-        return caches.match(event.request).then((cachedResponse) => {
-          if (cachedResponse) {
-            return cachedResponse;
-          }
-          // Se é uma navegação, retornar o shell do app
-          if (event.request.mode === 'navigate') {
-            return caches.match(OFFLINE_URL);
-          }
-          return new Response('Offline', { status: 503, statusText: 'Offline' });
-        });
-      })
+      .catch(() =>
+        caches.match(event.request).then((cached) => {
+          if (cached) return cached;
+          if (event.request.mode === 'navigate') return caches.match(OFFLINE_URL);
+          return new Response('Offline', { status: 503 });
+        })
+      )
   );
 });
