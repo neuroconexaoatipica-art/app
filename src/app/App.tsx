@@ -1,12 +1,21 @@
-function AppContent() {
-  const { user: currentUser, isLoading } = useProfileContext();
+const handleLoginSuccess = async () => {
+  setIsLoginOpen(false);
 
-  const [currentPage, setCurrentPage] = useState<PageType>('home');
-  const [pageResolved, setPageResolved] = useState(false);
+  const { data: { session } } = await supabase.auth.getSession();
 
-  useEffect(() => {
-    if (isLoading) return;
-    setPageResolved(true);
-  }, [isLoading]);
+  if (session?.user) {
+    const { data } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', session.user.id)
+      .single();
 
-  
+    if (data?.role && hasAppAccess(data.role)) {
+      setCurrentPage('social-hub');
+    } else {
+      setCurrentPage('index');
+    }
+  }
+};
+
+
