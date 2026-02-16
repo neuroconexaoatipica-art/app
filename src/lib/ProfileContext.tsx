@@ -1,115 +1,99 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "./supabase";
-import type { User as SupabaseUser } from "@supabase/supabase-js";
 
-interface Profile {
+type Profile = {
   id: string;
-  name: string;
-  bio: string | null;
-  profile_photo: string | null;
   role: string;
-  access_released: boolean;
-  onboarding_done: boolean;
-  whatsapp: string[] | null;
-  allow_whatsapp: boolean;
-  allow_email: boolean;
-  beta_lifetime: string[] | null;
-}
+  name?: string;
+  onboarding_done?: boolean;
+  access_released?: boolean;
+};
 
-interface ProfileContextType {
-  user: SupabaseUser | null;
-  profile: Profile | null;
-  loading: boolean;
-  refreshProfile: () => Promise<void>;
-}
+type ProfileContextType = {
+  user: Profile | null;
+  isLoading: boolean;
+};
 
-const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
+const ProfileContext = createContext<ProfileContextType>({
+  user: null,
+  isLoading: true,
+});
 
-export function ProfileProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<SupabaseUser | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  const loadProfile = async (userId: string) => {
-    const { data, error } = await supabase
-      .from("users")
-      .select("*")
-      .eq("id", userId)
-      .single();
-
-    if (error) {
-      console.error("Erro ao carregar perfil:", error);
-      setProfile(null);
-      return;
-    }
-
-    setProfile(data);
-  };
-
-  const refreshProfile = async () => {
-    if (!user) return;
-    await loadProfile(user.id);
-  };
+export function ProfileProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<Profile | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
 
-    const initialize = async () => {
-      try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
+    const loadSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
 
-        if (!mounted) return;
-
-        if (session?.user) {
-          setUser(session.user);
-          await loadProfile(session.user.id);
-        } else {
-          setUser(null);
-          setProfile(null);
-        }
-      } catch (err) {
-        console.error("Erro inicializando sessão:", err);
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    };
-
-    initialize();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (!mounted) return;
 
-      if (session?.user) {
-        setUser(session.user);
-        await loadProfile(session.user.id);
+      if (!session) {
+        setUser(null);
+        setIsLoading(false);
+        return;
+      }
+
+      const { data } = await supabase
+        .from("users")
+        .select("id, role, name, onboarding_done, access_released")
+        .eq("id", session.user.id)
+        .single();
+
+      if (!mounted) return;
+
+      if (data) {
+        setUser(data);
       } else {
         setUser(null);
-        setProfile(null);
       }
-    });
+
+      setIsLoading(false);
+    };
+
+    loadSession();
+
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        if (!mounted) return;
+
+        if (!session) {
+          setUser(null);
+          return;
+        }
+
+        const { data } = await supabase
+          .from("users")
+          .select("id, role, name, onboarding_done, access_released")
+          .eq("id", session.user.id)
+          .single();
+
+        if (data) {
+          setUser(data);
+        } else {
+          setUser(null);
+        }
+      }
+    );
 
     return () => {
       mounted = false;
-      subscription.unsubscribe();
+      listener.subscription.unsubscribe();
     };
   }, []);
 
   return (
-    <ProfileContext.Provider value={{ user, profile, loading, refreshProfile }}>
+    <ProfileContext.Provider value={{ user, isLoading }}>
       {children}
     </ProfileContext.Provider>
   );
 }
 
-export function useProfile() {
-  const context = useContext(ProfileContext);
-  if (!context) {
-    throw new Error("useProfile must be used within ProfileProvider");
-  }
-  return context;
+export function useProfileContext() {
+  return useContext(ProfileContext);
 }
+
 

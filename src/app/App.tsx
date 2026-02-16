@@ -1,21 +1,12 @@
-const handleLoginSuccess = async () => {
-  setIsLoginOpen(false);
-
-  const { data: { session } } = await supabase.auth.getSession();
-
-  if (session?.user) {
-    const { data } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', session.user.id)
-      .single();
-
-    if (data?.role && hasAppAccess(data.role)) {
-      setCurrentPage('social-hub');
-    } else {
-      setCurrentPage('index');
-    }
-  }
-};
+function AppContent() {
 
 
+  const [isSignupOpen, setIsSignupOpen] = useState(false);
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState<PageType>('home');
+  const [pageResolved, setPageResolved] = useState(false);
+
+
+
+  
