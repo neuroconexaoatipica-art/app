@@ -1,3 +1,8 @@
-/privacy    /privacy.html    200
-/terms      /terms.html      200
-/*    /index.html   200
+/privacy                    /privacy.html                200
+/terms                      /terms.html                  200
+/seguranca-infantil         /seguranca-infantil.html      200
+/offline                    /offline.html                200
+/download-instructions      /download-instructions.html  200
+/guia-play-store            /guia-play-store.html        200
+/limpar-cache               /limpar-cache.html           200
+/*                          /index.html                  200
