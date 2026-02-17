@@ -71,6 +71,7 @@ export function SignupPopup({ isOpen, onClose, onSwitchToLogin, onSuccess }: Sig
             whatsapp: whatsappDigits,
             allow_whatsapp: allowWhatsapp,
             allow_email: allowEmail,
+            terms_version: '1.0',
           },
           emailRedirectTo: window.location.origin,
         }
@@ -326,11 +327,11 @@ export function SignupPopup({ isOpen, onClose, onSwitchToLogin, onSuccess }: Sig
                 />
                 <label htmlFor="accept-terms" className="text-sm text-[#35363A]/70 cursor-pointer leading-relaxed">
                   Li e concordo com os{" "}
-                  <a href="#" onClick={(e) => { e.preventDefault(); window.open('/terms', '_blank'); }} className="text-[#C8102E] font-semibold hover:underline">
+                  <a href="#" onClick={(e) => { e.preventDefault(); window.open('/terms.html', '_blank'); }} className="text-[#C8102E] font-semibold hover:underline">
                     Termos de Uso
                   </a>{" "}
                   e a{" "}
-                  <a href="#" onClick={(e) => { e.preventDefault(); window.open('/privacy', '_blank'); }} className="text-[#C8102E] font-semibold hover:underline">
+                  <a href="#" onClick={(e) => { e.preventDefault(); window.open('/privacy.html', '_blank'); }} className="text-[#C8102E] font-semibold hover:underline">
                     Politica de Privacidade
                   </a>
                   <span className="text-[#C8102E] ml-1">*</span>

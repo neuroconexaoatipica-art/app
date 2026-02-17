@@ -25,17 +25,19 @@ export type UserRole = 'visitor' | 'user_free' | 'member' | 'founder' | 'admin';
 
 export interface User {
   id: string;
-  email: string;
   name: string;
   bio: string | null;
   profile_photo: string | null;
   role: UserRole;
   access_released: boolean;
   onboarding_done: boolean;
-  onboarding_data: Record<string, any> | null;
-  whatsapp: string | null;
+  whatsapp: string[] | null;
+  beta_lifetime: string[] | null;
   allow_whatsapp: boolean;
   allow_email: boolean;
+  terms_version: string;
+  terms_accepted_at: string;
+  updated_at: string;
   created_at: string;
 }
 

@@ -9,13 +9,9 @@ export function useSeats() {
 
   const loadSeats = useCallback(async () => {
     try {
-      const { count, error } = await supabase
-        .from('users')
-        .select('id', { count: 'exact', head: true })
-        .in('role', ['member', 'founder', 'admin']);
-
-      if (!error && count !== null) {
-        setSeatsUsed(count);
+      const { data, error } = await supabase.rpc('get_seats_count');
+      if (!error && data !== null) {
+        setSeatsUsed(data);
       }
     } catch (err) {
       console.error('Erro ao contar vagas:', err);

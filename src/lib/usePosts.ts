@@ -12,60 +12,150 @@ interface UsePostsOptions {
   authorId?: string | null;
 }
 
+const PAGE_SIZE = 20;
+
 export function usePosts(isPublicFeedOrOptions: boolean | UsePostsOptions = false) {
-  const [posts, setPosts] = useState<PostWithAuthor[]>([]);
+  const [pinnedPosts, setPinnedPosts] = useState<PostWithAuthor[]>([]);
+  const [regularPosts, setRegularPosts] = useState<PostWithAuthor[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const options: UsePostsOptions = typeof isPublicFeedOrOptions === 'boolean' ? { isPublicFeed: isPublicFeedOrOptions } : isPublicFeedOrOptions;
+  const [hasMore, setHasMore] = useState(true);
+
+  // Normalizar opções
+  const options: UsePostsOptions = typeof isPublicFeedOrOptions === 'boolean'
+    ? { isPublicFeed: isPublicFeedOrOptions }
+    : isPublicFeedOrOptions;
+
   const optionsRef = useRef(options);
   optionsRef.current = options;
+
   const filterKey = `${options.isPublicFeed || false}-${options.communityId || 'none'}-${options.authorId || 'none'}`;
 
+  const buildQuery = useCallback((isPinned?: boolean) => {
+    let q = supabase
+      .from('posts')
+      .select(`*, author_data:users!author(id,name,profile_photo,role,bio)`)
+      .order('created_at', { ascending: false });
+
+    const o = optionsRef.current;
+    if (o.isPublicFeed) q = q.eq('is_public', true);
+    if (o.communityId)  q = q.eq('community', o.communityId);
+    if (o.authorId)     q = q.eq('author', o.authorId);
+    if (isPinned === true)  q = q.eq('is_pinned', true);
+    if (isPinned === false) q = q.eq('is_pinned', false);
+    return q;
+  }, []);
+
+  const enrichWithAuthors = useCallback(async (raw: Post[]): Promise<PostWithAuthor[]> => {
+    if (!raw.length) return [];
+    const ids = [...new Set(raw.map(p => p.author))];
+    const { data: authors } = await supabase
+      .from('users')
+      .select('id,name,profile_photo,role,bio')
+      .in('id', ids);
+    const m: Record<string, any> = {};
+    authors?.forEach(a => { m[a.id] = a; });
+    return raw.map(p => ({
+      ...p,
+      author_data: m[p.author] || { id: p.author, name: 'Membro', profile_photo: null, role: 'member', bio: null },
+    }));
+  }, []);
+
   const loadPosts = useCallback(async () => {
+    const o = optionsRef.current;
+    // Se authorId é explicitamente passado mas é null/undefined/empty, não carregar
+    if ('authorId' in o && !o.authorId) {
+      setPinnedPosts([]); setRegularPosts([]); setIsLoading(false); return;
+    }
     try {
-      setIsLoading(true); setError(null);
-      const currentOptions = optionsRef.current;
-      if ('authorId' in currentOptions && !currentOptions.authorId) { setPosts([]); setIsLoading(false); return; }
-      let query = supabase.from('posts').select(`*, author_data:users!author (id, name, profile_photo, role, bio)`).order('created_at', { ascending: false });
-      if (currentOptions.isPublicFeed) { query = query.eq('is_public', true); }
-      if (currentOptions.communityId) { query = query.eq('community', currentOptions.communityId); }
-      if (currentOptions.authorId) { query = query.eq('author', currentOptions.authorId); }
-      const { data, error: fetchError } = await query;
-      if (fetchError) {
-        console.error('Erro ao buscar posts (JOIN):', fetchError);
-        try {
-          let fallbackQuery = supabase.from('posts').select('*').order('created_at', { ascending: false });
-          if (currentOptions.isPublicFeed) { fallbackQuery = fallbackQuery.eq('is_public', true); }
-          if (currentOptions.communityId) { fallbackQuery = fallbackQuery.eq('community', currentOptions.communityId); }
-          if (currentOptions.authorId) { fallbackQuery = fallbackQuery.eq('author', currentOptions.authorId); }
-          const { data: fallbackData, error: fallbackError } = await fallbackQuery;
-          if (fallbackError) { setError(fallbackError.message); setPosts([]); return; }
-          const authorIds = [...new Set((fallbackData || []).map((p: Post) => p.author))];
-          let authorsMap: Record<string, any> = {};
-          if (authorIds.length > 0) {
-            const { data: authors } = await supabase.from('users').select('id, name, profile_photo, role, bio').in('id', authorIds);
-            if (authors) { authors.forEach((a: any) => { authorsMap[a.id] = a; }); }
-          }
-          const postsWithAuthors = (fallbackData || []).map((post: Post) => ({ ...post, author_data: authorsMap[post.author] || { id: post.author, name: 'Membro', profile_photo: null, role: 'user_free', bio: null } }));
-          setPosts(postsWithAuthors as PostWithAuthor[]);
-        } catch { setError('Erro ao carregar posts'); setPosts([]); }
-        return;
+      setIsLoading(true); setError(null); setHasMore(true);
+
+      // Pinned posts
+      const { data: pinData, error: pinErr } = await buildQuery(true);
+      if (pinErr) {
+        // Fallback: buscar sem JOIN
+        const { data: raw } = await supabase.from('posts').select('*')
+          .eq('is_pinned', true).order('created_at', { ascending: false });
+        setPinnedPosts(raw ? await enrichWithAuthors(raw) : []);
+      } else {
+        setPinnedPosts((pinData as PostWithAuthor[]) || []);
       }
-      setPosts((data as PostWithAuthor[]) || []);
-    } catch (err: any) { console.error('Erro ao carregar posts:', err); setError(err.message || 'Erro ao carregar posts'); setPosts([]); }
-    finally { setIsLoading(false); }
+
+      // Regular posts (first page)
+      const { data: regData, error: regErr } = await buildQuery(false).limit(PAGE_SIZE + 1);
+      if (regErr) {
+        // Fallback
+        let fq = supabase.from('posts').select('*').eq('is_pinned', false)
+          .order('created_at', { ascending: false }).limit(PAGE_SIZE + 1);
+        if (o.isPublicFeed) fq = fq.eq('is_public', true);
+        if (o.communityId)  fq = fq.eq('community', o.communityId);
+        if (o.authorId)     fq = fq.eq('author', o.authorId);
+        const { data: raw } = await fq;
+        const enriched = raw ? await enrichWithAuthors(raw) : [];
+        setHasMore(enriched.length > PAGE_SIZE);
+        setRegularPosts(enriched.slice(0, PAGE_SIZE));
+      } else {
+        const d = (regData as PostWithAuthor[]) || [];
+        setHasMore(d.length > PAGE_SIZE);
+        setRegularPosts(d.slice(0, PAGE_SIZE));
+      }
+    } catch (err: any) {
+      setError(err.message || 'Erro ao carregar posts');
+      setPinnedPosts([]); setRegularPosts([]);
+    } finally { setIsLoading(false); }
+  }, [buildQuery, enrichWithAuthors]);
+
+  const loadMore = useCallback(async () => {
+    if (!hasMore || isLoadingMore) return;
+    const last = regularPosts[regularPosts.length - 1];
+    if (!last) return;
+    try {
+      setIsLoadingMore(true);
+      const { data, error: err } = await buildQuery(false)
+        .lt('created_at', last.created_at)
+        .limit(PAGE_SIZE + 1);
+      if (err) {
+        // Fallback
+        const o = optionsRef.current;
+        let fq = supabase.from('posts').select('*').eq('is_pinned', false)
+          .lt('created_at', last.created_at)
+          .order('created_at', { ascending: false }).limit(PAGE_SIZE + 1);
+        if (o.isPublicFeed) fq = fq.eq('is_public', true);
+        if (o.communityId)  fq = fq.eq('community', o.communityId);
+        if (o.authorId)     fq = fq.eq('author', o.authorId);
+        const { data: raw } = await fq;
+        const enriched = raw ? await enrichWithAuthors(raw) : [];
+        setHasMore(enriched.length > PAGE_SIZE);
+        setRegularPosts(prev => [...prev, ...enriched.slice(0, PAGE_SIZE)]);
+      } else {
+        const d = (data as PostWithAuthor[]) || [];
+        setHasMore(d.length > PAGE_SIZE);
+        setRegularPosts(prev => [...prev, ...d.slice(0, PAGE_SIZE)]);
+      }
+    } finally { setIsLoadingMore(false); }
+  }, [hasMore, isLoadingMore, regularPosts, buildQuery, enrichWithAuthors]);
+
+  const deletePost = useCallback(async (postId: string) => {
+    try {
+      const { error } = await supabase.from('posts').delete().eq('id', postId);
+      if (error) throw error;
+      setPinnedPosts(prev => prev.filter(p => p.id !== postId));
+      setRegularPosts(prev => prev.filter(p => p.id !== postId));
+      return { success: true };
+    } catch (err: any) { return { success: false, error: err.message }; }
   }, []);
 
   useEffect(() => { loadPosts(); }, [filterKey]);
 
-  const deletePost = async (postId: string) => {
-    try {
-      const { error: deleteError } = await supabase.from('posts').delete().eq('id', postId);
-      if (deleteError) throw deleteError;
-      setPosts(prev => prev.filter(p => p.id !== postId));
-      return { success: true };
-    } catch (err: any) { console.error('Erro ao deletar post:', err); return { success: false, error: err.message }; }
+  return {
+    posts: [...pinnedPosts, ...regularPosts],
+    isLoading,
+    isLoadingMore,
+    error,
+    hasMore,
+    loadMore,
+    refreshPosts: loadPosts,
+    deletePost,
   };
-
-  return { posts, isLoading, error, refreshPosts: loadPosts, deletePost };
 }
