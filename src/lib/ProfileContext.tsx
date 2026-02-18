@@ -1,9 +1,8 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { supabase } from './supabase';
 import type { User } from './supabase';
 import { normalizeRole } from './roleEngine';
-
 
 interface ProfileContextValue {
   user: User | null;
@@ -18,6 +17,7 @@ const ProfileContext = createContext<ProfileContextValue | null>(null);
 export function ProfileProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const isLoadingRef = useRef(true);
 
   const loadProfile = useCallback(async (userId?: string) => {
     try {
@@ -30,6 +30,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       if (!uid) {
         setUser(null);
         setIsLoading(false);
+        isLoadingRef.current = false;
         return;
       }
 
@@ -67,6 +68,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
           } else {
             console.error('Safety net: erro ao criar usuário:', insertError);
             setIsLoading(false);
+            isLoadingRef.current = false;
             return;
           }
         }
@@ -111,6 +113,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       console.error('Erro ao carregar perfil:', err);
     } finally {
       setIsLoading(false);
+      isLoadingRef.current = false;
     }
   }, []);
 
@@ -118,11 +121,12 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let isMounted = true;
 
-    // Timeout de segurança para não travar no loading
+    // Timeout de segurança — usa REF para não capturar valor stale
     const timeout = setTimeout(() => {
-      if (isMounted && isLoading) {
-        console.warn('Profile: timeout de 3s atingido');
+      if (isMounted && isLoadingRef.current) {
+        console.warn('Profile: timeout de 3s — forçando saída do loading');
         setIsLoading(false);
+        isLoadingRef.current = false;
       }
     }, 3000);
 
