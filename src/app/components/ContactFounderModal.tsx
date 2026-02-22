@@ -96,7 +96,6 @@ export function ContactFounderModal({ isOpen, onClose }: ContactFounderModalProp
             onClick={(e) => e.stopPropagation()}
             className="relative w-full max-w-md mx-4 bg-white rounded-2xl shadow-2xl p-8 md:p-10 border-2 border-[#81D8D0]/20 max-h-[90vh] overflow-y-auto"
           >
-            {/* Fechar */}
             <button
               onClick={handleClose}
               className="absolute top-4 right-4 p-2 hover:bg-[#35363A]/5 rounded-lg transition-colors"
@@ -141,7 +140,6 @@ export function ContactFounderModal({ isOpen, onClose }: ContactFounderModalProp
                 )}
 
                 <form onSubmit={handleSubmit} className="space-y-5">
-                  {/* WhatsApp (opcional) */}
                   <div>
                     <label className="block text-sm font-medium text-[#35363A] mb-2">
                       WhatsApp{" "}
@@ -159,7 +157,6 @@ export function ContactFounderModal({ isOpen, onClose }: ContactFounderModalProp
                     </div>
                   </div>
 
-                  {/* Motivo (radio obrigatório) */}
                   <div>
                     <label className="block text-sm font-medium text-[#35363A] mb-3">
                       Motivo <span className="text-[#C8102E]">*</span>
@@ -190,7 +187,6 @@ export function ContactFounderModal({ isOpen, onClose }: ContactFounderModalProp
                     </div>
                   </div>
 
-                  {/* Mensagem (opcional) */}
                   <div>
                     <label className="block text-sm font-medium text-[#35363A] mb-2">
                       Mensagem{" "}
@@ -206,7 +202,6 @@ export function ContactFounderModal({ isOpen, onClose }: ContactFounderModalProp
                     />
                   </div>
 
-                  {/* Submit */}
                   <motion.button
                     type="submit"
                     whileHover={canSubmit ? { scale: 1.02 } : {}}
