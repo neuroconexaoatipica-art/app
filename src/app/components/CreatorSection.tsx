@@ -10,6 +10,7 @@ export function CreatorSection() {
   return (
     <section className="w-full py-16 md:py-24 lg:py-28 bg-black">
       <div className="mx-auto max-w-[1100px] px-6 lg:px-8">
+        {/* Título */}
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -21,6 +22,7 @@ export function CreatorSection() {
         </motion.h2>
 
         <div className="flex flex-col lg:flex-row gap-10 lg:gap-16 items-start">
+          {/* Imagem com efeito parallax */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -47,11 +49,15 @@ export function CreatorSection() {
                   />
                 )}
               </motion.div>
+              
+              {/* Elemento decorativo - Tiffany (campo de segurança) */}
               <div className="absolute -bottom-6 -right-6 w-40 h-40 bg-[#81D8D0]/20 rounded-3xl -z-10 blur-2xl" />
             </div>
           </motion.div>
 
+          {/* Texto */}
           <div className="w-full lg:w-7/12 space-y-6">
+            {/* Quote icon - Vermelho (pulsão) */}
             <motion.div
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 0.15 }}
@@ -61,6 +67,7 @@ export function CreatorSection() {
               <Quote className="h-16 w-16 text-[#C8102E]" />
             </motion.div>
 
+            {/* Parágrafos com animação stagger */}
             <motion.div
               initial="hidden"
               whileInView="visible"

@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
+// v7-visual: landing consolidada + pós-cadastro ativo + formulário fundadora
 import { motion } from "motion/react";
 import { HeaderInstitucional } from "./components/HeaderInstitucional";
 import { HeroSection } from "./components/HeroSection";
@@ -6,15 +7,16 @@ import { SignupPopup } from "./components/SignupPopup";
 import { LoginPopup } from "./components/LoginPopup";
 import { CommunitiesShowcase } from "./components/CommunitiesShowcase";
 import { CreatorSection } from "./components/CreatorSection";
-import { ManifestoSection } from "./components/ManifestoSection";
-import { MembershipSection } from "./components/MembershipSection";
+import { NucleoFounderSection } from "./components/NucleoFounderSection";
+import { ClaritySection } from "./components/ClaritySection";
 import { FooterInstitucional } from "./components/FooterInstitucional";
 import { OnboardingFlow } from "./components/OnboardingFlow";
+import { WelcomePage } from "./components/WelcomePage";
+import { ContactFounderModal } from "./components/ContactFounderModal";
 import { EthicsPage } from "./components/EthicsPage";
 import { WarningsPage } from "./components/WarningsPage";
 import { PrivacyPolicyPage } from "./components/PrivacyPolicyPage";
 import { TermsOfUsePage } from "./components/TermsOfUsePage";
-import { IndexPage } from "./components/IndexPage";
 import { SocialHub } from "./components/SocialHub";
 import { ProfileMila } from "./components/ProfileMila";
 import { FeedPublico } from "./components/FeedPublico";
@@ -27,7 +29,7 @@ import type { CommunityWithMeta } from "../lib";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { LogoIcon } from "./components/LogoIcon";
 
-type PageType = 'home' | 'ethics' | 'warnings' | 'privacy' | 'terms' | 'index' | 'social-hub' | 'profile' | 'profile-user' | 'feed' | 'communities' | 'community-detail' | 'roadmap';
+type PageType = 'home' | 'ethics' | 'warnings' | 'privacy' | 'terms' | 'welcome' | 'social-hub' | 'profile' | 'profile-user' | 'feed' | 'communities' | 'community-detail' | 'roadmap';
 
 // Componente interno que consome os Contexts
 function AppContent() {
@@ -36,14 +38,27 @@ function AppContent() {
   const [isSignupOpen, setIsSignupOpen] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
+  const [isContactFounderOpen, setIsContactFounderOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState<PageType>('home');
+  const [openCreatePostOnNav, setOpenCreatePostOnNav] = useState(false);
 
+  // Estado para visualização de perfil de outro usuário
   const [viewingUserId, setViewingUserId] = useState<string | null>(null);
+  // Estado para visualização de comunidade individual
   const [viewingCommunity, setViewingCommunity] = useState<CommunityWithMeta | null>(null);
 
+  // Ref para scroll até Núcleo Fundador
+  const nucleoRef = useRef<HTMLElement>(null);
+
+  const scrollToNucleo = useCallback(() => {
+    nucleoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, []);
+
+  // Roteamento baseado em role — executa quando user muda
   useEffect(() => {
     if (isLoading) return;
 
+    // Checar hash da URL para roteamento direto (ex: #privacy, #terms)
     const hash = window.location.hash.replace('#', '');
     const publicPages: Record<string, PageType> = {
       'privacy': 'privacy',
@@ -56,17 +71,22 @@ function AppContent() {
       return;
     }
 
+    // Não redirecionar se está na tela de boas-vindas (pós-cadastro)
+    if (currentPage === 'welcome') return;
+
     if (currentUser) {
       if (hasAppAccess(currentUser.role)) {
         setCurrentPage('social-hub');
       } else {
-        setCurrentPage('index');
+        // Fallback para visitor ou roles desconhecidos
+        setCurrentPage('home');
       }
     } else {
       setCurrentPage('home');
     }
   }, [currentUser, isLoading]);
 
+  // Escutar mudancas de hash (ex: usuario digitar #privacy na URL)
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#', '');
@@ -104,6 +124,7 @@ function AppContent() {
 
   const handleLoginSuccess = async () => {
     setIsLoginOpen(false);
+    // O ProfileProvider detecta SIGNED_IN e recarrega automaticamente
   };
 
   const handleSignupSuccess = () => {
@@ -122,7 +143,8 @@ function AppContent() {
         .eq('id', session.user.id);
     }
     
-    setCurrentPage('index');
+    // Mostrar tela de boas-vindas ativa (não sala de espera)
+    setCurrentPage('welcome');
   };
 
   const handleNavigate = (page: string) => {
@@ -154,8 +176,21 @@ function AppContent() {
 
   const getBackPage = (): PageType => {
     if (hasAppAccess(currentUser?.role)) return 'social-hub';
-    if (currentUser) return 'index';
     return 'home';
+  };
+
+  // Welcome page actions
+  const handleWelcomeCreatePost = () => {
+    setOpenCreatePostOnNav(true);
+    setCurrentPage('social-hub');
+  };
+
+  const handleWelcomeCompleteProfile = () => {
+    setCurrentPage('profile');
+  };
+
+  const handleWelcomeContactFounder = () => {
+    setIsContactFounderOpen(true);
   };
 
   const renderPage = () => {
@@ -169,18 +204,17 @@ function AppContent() {
       case 'terms':
         return <TermsOfUsePage />;
       
-      case 'index':
+      case 'welcome':
         return (
-          <IndexPage 
-            onNavigateToCommunities={() => handleNavigate('communities')}
-            onNavigateToProfile={() => handleNavigate('profile')}
-            onNavigateToRoadmap={() => handleNavigate('roadmap')}
-            onNavigateToUserProfile={handleNavigateToUserProfile}
+          <WelcomePage
+            onCreatePost={handleWelcomeCreatePost}
+            onCompleteProfile={handleWelcomeCompleteProfile}
+            onContactFounder={handleWelcomeContactFounder}
           />
         );
       
       case 'roadmap':
-        return <RoadmapPage onBack={() => handleNavigate(currentUser ? 'index' : 'home')} />;
+        return <RoadmapPage onBack={() => handleNavigate(currentUser ? 'social-hub' : 'home')} />;
       
       case 'social-hub':
         return (
@@ -239,23 +273,25 @@ function AppContent() {
           />
         );
       
-      // Landing Page
+      // Landing Page — 5 seções conforme spec
       default:
         return (
           <>
-            <HeroSection onCtaClick={handleOpenSignup} />
+            <HeroSection onCtaClick={handleOpenSignup} onScrollToNucleo={scrollToNucleo} />
+            <NucleoFounderSection ref={nucleoRef} />
             <CommunitiesShowcase />
             <CreatorSection />
-            <ManifestoSection />
-            <MembershipSection onJoinClick={handleOpenSignup} />
+            <ClaritySection onCtaClick={handleOpenSignup} />
           </>
         );
     }
   };
 
-  const hideHeaderFooterPages = ['index', 'social-hub', 'profile', 'profile-user', 'feed', 'communities', 'community-detail', 'roadmap'];
+  // Páginas que NÃO mostram header/footer institucional
+  const hideHeaderFooterPages = ['welcome', 'social-hub', 'profile', 'profile-user', 'feed', 'communities', 'community-detail', 'roadmap'];
   const shouldShowHeaderFooter = !hideHeaderFooterPages.includes(currentPage);
 
+  // Loading inicial — só depende de isLoading
   if (isLoading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
@@ -317,11 +353,16 @@ function AppContent() {
         onClose={() => setIsOnboardingOpen(false)}
         onComplete={handleOnboardingComplete}
       />
+
+      <ContactFounderModal
+        isOpen={isContactFounderOpen}
+        onClose={() => setIsContactFounderOpen(false)}
+      />
     </div>
   );
 }
 
-// Componente principal
+// Componente principal: wraps com Providers (instância ÚNICA de cada)
 export default function App() {
   return (
     <ErrorBoundary>
