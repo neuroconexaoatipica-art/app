@@ -42,12 +42,9 @@ export function ContactFounderModal({ isOpen, onClose }: ContactFounderModalProp
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSubmit || !user) return;
-
     setIsSubmitting(true);
-
     try {
       const whatsappDigits = extractDigits(whatsapp);
-
       const { error } = await supabase.from("contact_requests").insert({
         user_id: user.id,
         whatsapp: whatsappDigits || null,
@@ -55,9 +52,7 @@ export function ContactFounderModal({ isOpen, onClose }: ContactFounderModalProp
         message: message.trim() || null,
         status: "pending",
       });
-
       if (error) throw error;
-
       setSuccess(true);
     } catch (err) {
       console.error("Erro ao enviar contato:", err);
@@ -112,15 +107,9 @@ export function ContactFounderModal({ isOpen, onClose }: ContactFounderModalProp
                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#81D8D0]/15 mb-6">
                   <CheckCircle className="h-8 w-8 text-[#81D8D0]" />
                 </div>
-                <h3 className="text-2xl font-semibold text-[#35363A] mb-3">
-                  Mensagem enviada
-                </h3>
-                <p className="text-[#35363A]/70 font-normal leading-relaxed mb-2">
-                  Entrarei em contato pessoalmente.
-                </p>
-                <p className="text-[#35363A]/50 font-normal">
-                  Pode levar até 48h.
-                </p>
+                <h3 className="text-2xl font-semibold text-[#35363A] mb-3">Mensagem enviada</h3>
+                <p className="text-[#35363A]/70 font-normal leading-relaxed mb-2">Entrarei em contato pessoalmente.</p>
+                <p className="text-[#35363A]/50 font-normal">Pode levar até 48h.</p>
                 <button
                   onClick={handleClose}
                   className="mt-8 px-8 py-3 bg-[#81D8D0] text-black rounded-xl font-bold hover:bg-[#81D8D0]/90 transition-all"
@@ -130,20 +119,14 @@ export function ContactFounderModal({ isOpen, onClose }: ContactFounderModalProp
               </motion.div>
             ) : (
               <>
-                <h2 className="text-2xl md:text-3xl font-semibold mb-2 text-[#35363A]">
-                  Falar com a fundadora
-                </h2>
+                <h2 className="text-2xl md:text-3xl font-semibold mb-2 text-[#35363A]">Falar com a fundadora</h2>
                 {user && (
-                  <p className="text-sm text-[#35363A]/60 mb-6 font-normal">
-                    Olá, {user.name}.
-                  </p>
+                  <p className="text-sm text-[#35363A]/60 mb-6 font-normal">Olá, {user.name}.</p>
                 )}
-
                 <form onSubmit={handleSubmit} className="space-y-5">
                   <div>
                     <label className="block text-sm font-medium text-[#35363A] mb-2">
-                      WhatsApp{" "}
-                      <span className="text-[#35363A]/40 font-normal">(opcional)</span>
+                      WhatsApp <span className="text-[#35363A]/40 font-normal">(opcional)</span>
                     </label>
                     <div className="relative">
                       <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-[#35363A]/40" />
@@ -156,7 +139,6 @@ export function ContactFounderModal({ isOpen, onClose }: ContactFounderModalProp
                       />
                     </div>
                   </div>
-
                   <div>
                     <label className="block text-sm font-medium text-[#35363A] mb-3">
                       Motivo <span className="text-[#C8102E]">*</span>
@@ -186,11 +168,9 @@ export function ContactFounderModal({ isOpen, onClose }: ContactFounderModalProp
                       )}
                     </div>
                   </div>
-
                   <div>
                     <label className="block text-sm font-medium text-[#35363A] mb-2">
-                      Mensagem{" "}
-                      <span className="text-[#35363A]/40 font-normal">(opcional)</span>
+                      Mensagem <span className="text-[#35363A]/40 font-normal">(opcional)</span>
                     </label>
                     <textarea
                       value={message}
@@ -201,7 +181,6 @@ export function ContactFounderModal({ isOpen, onClose }: ContactFounderModalProp
                       className="w-full px-4 py-3 border-2 border-[#35363A]/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#81D8D0] focus:border-transparent resize-none transition-all text-[#35363A] bg-white placeholder:text-[#35363A]/40"
                     />
                   </div>
-
                   <motion.button
                     type="submit"
                     whileHover={canSubmit ? { scale: 1.02 } : {}}

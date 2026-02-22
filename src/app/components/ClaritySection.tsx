@@ -32,7 +32,6 @@ export function ClaritySection({ onCtaClick }: ClaritySectionProps) {
   return (
     <section className="w-full py-16 md:py-24 lg:py-28 bg-black">
       <div className="mx-auto max-w-[900px] px-6 lg:px-8">
-        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -48,7 +47,6 @@ export function ClaritySection({ onCtaClick }: ClaritySectionProps) {
           </p>
         </motion.div>
 
-        {/* Steps */}
         <div className="space-y-5 mb-14">
           {steps.map((step, i) => {
             const IconComponent = step.icon;
@@ -73,7 +71,6 @@ export function ClaritySection({ onCtaClick }: ClaritySectionProps) {
           })}
         </div>
 
-        {/* Reforço final */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
