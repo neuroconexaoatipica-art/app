@@ -10,22 +10,22 @@ export function ClaritySection({ onCtaClick }: ClaritySectionProps) {
     {
       icon: UserCheck,
       title: "Perfil criado imediatamente",
-      description: "Você entra e já pode explorar.",
+      description: "Voc\u00ea entra e j\u00e1 pode explorar.",
     },
     {
       icon: CheckCircle,
-      title: "Exploração das comunidades liberada",
+      title: "Explora\u00e7\u00e3o das comunidades liberada",
       description: "Acesse todas as 14 comunidades desde o primeiro momento.",
     },
     {
       icon: Shield,
-      title: "Se desejar ser fundador — passa por curadoria ética",
-      description: "Fundadores constroem a base. A seleção é humana e cuidadosa.",
+      title: "Se desejar ser fundador \u2014 passa por curadoria \u00e9tica",
+      description: "Fundadores constroem a base. A sele\u00e7\u00e3o \u00e9 humana e cuidadosa.",
     },
     {
       icon: MessageCircle,
       title: "Contato humano estruturado",
-      description: "Nada automatizado. Cada interação é real.",
+      description: "Nada automatizado. Cada intera\u00e7\u00e3o \u00e9 real.",
     },
   ];
 
@@ -43,7 +43,7 @@ export function ClaritySection({ onCtaClick }: ClaritySectionProps) {
             O que acontece depois do cadastro
           </h2>
           <p className="text-lg md:text-xl text-white/70 max-w-2xl mx-auto font-normal leading-relaxed">
-            Transparência total. Sem surpresas.
+            Transpar\u00eancia total. Sem surpresas.
           </p>
         </motion.div>
 
@@ -79,9 +79,9 @@ export function ClaritySection({ onCtaClick }: ClaritySectionProps) {
           className="text-center"
         >
           <p className="text-lg text-white/50 italic mb-8">
-            Sem automatização invasiva.<br />
+            Sem automatiza\u00e7\u00e3o invasiva.<br />
             Sem spam.<br />
-            Sem pressão.
+            Sem press\u00e3o.
           </p>
 
           <motion.button

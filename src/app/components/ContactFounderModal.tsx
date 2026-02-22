@@ -13,7 +13,7 @@ type ReasonType = "founder" | "feedback" | "tech" | "other";
 const REASON_LABELS: Record<ReasonType, string> = {
   founder: "Contribuir como fundador",
   feedback: "Feedback",
-  tech: "Dúvida técnica",
+  tech: "D\u00favida t\u00e9cnica",
   other: "Outro",
 };
 
@@ -109,7 +109,7 @@ export function ContactFounderModal({ isOpen, onClose }: ContactFounderModalProp
                 </div>
                 <h3 className="text-2xl font-semibold text-[#35363A] mb-3">Mensagem enviada</h3>
                 <p className="text-[#35363A]/70 font-normal leading-relaxed mb-2">Entrarei em contato pessoalmente.</p>
-                <p className="text-[#35363A]/50 font-normal">Pode levar até 48h.</p>
+                <p className="text-[#35363A]/50 font-normal">Pode levar at\u00e9 48h.</p>
                 <button
                   onClick={handleClose}
                   className="mt-8 px-8 py-3 bg-[#81D8D0] text-black rounded-xl font-bold hover:bg-[#81D8D0]/90 transition-all"
@@ -121,7 +121,7 @@ export function ContactFounderModal({ isOpen, onClose }: ContactFounderModalProp
               <>
                 <h2 className="text-2xl md:text-3xl font-semibold mb-2 text-[#35363A]">Falar com a fundadora</h2>
                 {user && (
-                  <p className="text-sm text-[#35363A]/60 mb-6 font-normal">Olá, {user.name}.</p>
+                  <p className="text-sm text-[#35363A]/60 mb-6 font-normal">Ol\u00e1, {user.name}.</p>
                 )}
                 <form onSubmit={handleSubmit} className="space-y-5">
                   <div>
