@@ -61,7 +61,6 @@ export function ContactFounderModal({ isOpen, onClose }: ContactFounderModalProp
       setSuccess(true);
     } catch (err) {
       console.error("Erro ao enviar contato:", err);
-      // Still show success — don't punish user for infra issues
       setSuccess(true);
     } finally {
       setIsSubmitting(false);
@@ -69,7 +68,6 @@ export function ContactFounderModal({ isOpen, onClose }: ContactFounderModalProp
   };
 
   const handleClose = () => {
-    // Reset after close animation
     setTimeout(() => {
       setWhatsapp("");
       setReason("");
@@ -107,7 +105,6 @@ export function ContactFounderModal({ isOpen, onClose }: ContactFounderModalProp
             </button>
 
             {success ? (
-              /* Tela de sucesso */
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -133,7 +130,6 @@ export function ContactFounderModal({ isOpen, onClose }: ContactFounderModalProp
                 </button>
               </motion.div>
             ) : (
-              /* Formulário */
               <>
                 <h2 className="text-2xl md:text-3xl font-semibold mb-2 text-[#35363A]">
                   Falar com a fundadora
