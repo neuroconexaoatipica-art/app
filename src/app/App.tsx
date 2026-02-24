@@ -374,3 +374,21 @@ export default function App() {
     </ErrorBoundary>
   );
 }
+
+
+-- UPDATE usando ILIKE pra ignorar encoding
+UPDATE public.communities SET 
+  manifesto_text = 'Sexo não é tabu aqui. Desejo não é problema. Vínculo não é fraqueza.
+
+Essa comunidade existe porque a maioria dos espaços trata sexo como performance ou como pecado. Aqui não. Aqui sexo é corpo, é cabeça, é intensidade, é confusão, é tesão, é medo, é vontade de engolir alguém inteiro e ao mesmo tempo querer sumir.
+
+Aqui falamos de desejo como ele é: bagunçado, contraditório, às vezes assustador. Falamos de foder e de tremer. De querer alguém com o corpo inteiro e não saber como dizer. De ter fetiche e não ter vergonha. De não sentir nada e não precisar fingir que sente.
+
+Neurodivergência atravessa tudo isso. Hipersensibilidade no toque. Hiperfoco em alguém. Dissociação no meio do sexo. Ansiedade antes, durante, depois. Intensidade que o outro não aguenta. Vontade que não cabe em nenhum roteiro.
+
+Não é grupo de educação sexual. Não é terapia. Não é espaço pra conselho moralizante.
+
+É território de gente adulta que quer falar sobre desejo, corpo e vínculo sem filtro — mas com respeito. Cru não é cruel. Honesto não é violento.
+
+Se você quer falar de sexo como gente grande, sem eufemismo e sem julgamento, você está no lugar certo.'
+WHERE name ILIKE '%sexo%desejo%';
