@@ -6,6 +6,8 @@ import { SocialHub } from './components/SocialHub'
 import { EventsPage } from './components/EventsPage'
 import { EventDetailPage } from './components/EventDetailPage'
 
+import type { EventWithMeta } from '../lib/useEvents'
+
 type Page =
   | 'home'
   | 'social-hub'
@@ -16,12 +18,16 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState<Page>('home')
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null)
 
+  // ============================
+  // NAVEGAÇÃO
+  // ============================
+
   const navigateToEvents = () => {
     setCurrentPage('events')
   }
 
-  const navigateToEventDetail = (eventId: string) => {
-    setSelectedEventId(eventId)
+  const navigateToEventDetail = (event: EventWithMeta) => {
+    setSelectedEventId(event.id)
     setCurrentPage('event-detail')
   }
 
@@ -29,13 +35,19 @@ export default function App() {
     setCurrentPage('home')
   }
 
+  const navigateToSocialHub = () => {
+    setCurrentPage('social-hub')
+  }
+
   return (
     <ProfileProvider>
       <CommunitiesProvider>
+
+        {/* HOME */}
         {currentPage === 'home' && (
           <div className="min-h-screen flex items-center justify-center bg-white">
             <button
-              onClick={() => setCurrentPage('social-hub')}
+              onClick={navigateToSocialHub}
               className="px-6 py-3 bg-black text-white rounded-lg"
             >
               Entrar
@@ -43,25 +55,37 @@ export default function App() {
           </div>
         )}
 
+        {/* SOCIAL HUB */}
         {currentPage === 'social-hub' && (
           <SocialHub
-            onNavigateToEvents={navigateToEvents}
+            onNavigateToProfile={() => {}}
+            onNavigateToCommunities={() => {}}
+            onNavigateToFeed={() => setCurrentPage('social-hub')}
+            onNavigateToUserProfile={(userId) => {
+              console.log('Perfil usuário:', userId)
+            }}
           />
         )}
 
+        {/* EVENTS */}
         {currentPage === 'events' && (
           <EventsPage
-            onNavigateHome={navigateHome}
-            onNavigateToEventDetail={navigateToEventDetail}
+            onBack={() => setCurrentPage('social-hub')}
+            onSelectEvent={navigateToEventDetail}
           />
         )}
 
+        {/* EVENT DETAIL */}
         {currentPage === 'event-detail' && selectedEventId && (
           <EventDetailPage
             eventId={selectedEventId}
             onBack={navigateToEvents}
+            onNavigateToProfile={(userId) => {
+              console.log('Perfil usuário:', userId)
+            }}
           />
         )}
+
       </CommunitiesProvider>
     </ProfileProvider>
   )
