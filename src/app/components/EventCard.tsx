@@ -1,10 +1,24 @@
-import { format, isPast, isToday, isTomorrow, differenceInMinutes } from "date-fns";
-import { ptBR } from "date-fns/locale/pt-BR";
 import { UserAvatar } from "./UserAvatar";
 import type { EventWithMeta } from "../../lib/useEvents";
 import { EVENT_TYPE_LABELS, RITUAL_TYPE_LABELS, LOCATION_TYPE_LABELS } from "../../lib/useEvents";
 import { motion } from "motion/react";
 import { Calendar, Clock, MapPin, Users, Video, Flame, CheckCircle, Star, User } from "lucide-react";
+
+// Formatacao de data nativa (sem date-fns)
+const fmtShort = new Intl.DateTimeFormat("pt-BR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+const fmtTime = new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" });
+
+function isPastDate(d: Date): boolean { return d.getTime() < Date.now(); }
+function isTodayDate(d: Date): boolean {
+  const now = new Date();
+  return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+}
+function isTomorrowDate(d: Date): boolean {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  return d.getFullYear() === tomorrow.getFullYear() && d.getMonth() === tomorrow.getMonth() && d.getDate() === tomorrow.getDate();
+}
+function diffMinutes(a: Date, b: Date): number { return Math.round((a.getTime() - b.getTime()) / 60000); }
 
 interface EventCardProps {
   event: EventWithMeta;
@@ -26,22 +40,23 @@ const EVENT_TYPE_COLORS: Record<string, string> = {
 
 export function EventCard({ event, onClick, onJoin, onLeave, compact = false }: EventCardProps) {
   const startDate = new Date(event.starts_at);
-  const isEventPast = isPast(startDate) && event.status !== 'live';
+  const isEventPast = isPastDate(startDate) && event.status !== 'live';
   const isLive = event.status === 'live';
-  const isEventToday = isToday(startDate);
-  const isEventTomorrow = isTomorrow(startDate);
+  const isEventToday = isTodayDate(startDate);
+  const isEventTomorrow = isTomorrowDate(startDate);
+
   const typeColor = EVENT_TYPE_COLORS[event.event_type] || '#374151';
 
   const getTimeLabel = () => {
     if (isLive) return 'Ao Vivo Agora';
     if (isEventToday) {
-      const mins = differenceInMinutes(startDate, new Date());
+      const mins = diffMinutes(startDate, new Date());
       if (mins > 0 && mins < 60) return `Em ${mins} min`;
       if (mins >= 60 && mins < 120) return `Em 1h`;
-      return `Hoje, ${format(startDate, 'HH:mm')}`;
+      return `Hoje, ${fmtTime.format(startDate)}`;
     }
-    if (isEventTomorrow) return `Amanha, ${format(startDate, 'HH:mm')}`;
-    return format(startDate, "d 'de' MMM, HH:mm", { locale: ptBR });
+    if (isEventTomorrow) return `Amanha, ${fmtTime.format(startDate)}`;
+    return fmtShort.format(startDate);
   };
 
   const isFull = event.max_participants !== null && event.participant_count >= event.max_participants;
@@ -78,12 +93,8 @@ export function EventCard({ event, onClick, onJoin, onLeave, compact = false }: 
       className={`bg-white/3 border border-white/10 rounded-2xl overflow-hidden hover:border-white/20 transition-all cursor-pointer ${isEventPast ? 'opacity-60' : ''}`}
       onClick={() => onClick(event)}
     >
-      {/* Cover ou Header colorido */}
       {event.cover_image_url ? (
-        <div
-          className="h-32 bg-cover bg-center relative"
-          style={{ backgroundImage: `url(${event.cover_image_url})` }}
-        >
+        <div className="h-32 bg-cover bg-center relative" style={{ backgroundImage: `url(${event.cover_image_url})` }}>
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
           <div className="absolute top-3 left-3 flex gap-2">
             <TypeBadge type={event.event_type} ritualType={event.ritual_type} color={typeColor} />
@@ -95,7 +106,6 @@ export function EventCard({ event, onClick, onJoin, onLeave, compact = false }: 
       )}
 
       <div className="p-5">
-        {/* Badges */}
         {!event.cover_image_url && (
           <div className="flex items-center gap-2 mb-3">
             <TypeBadge type={event.event_type} ritualType={event.ritual_type} color={typeColor} />
@@ -108,22 +118,19 @@ export function EventCard({ event, onClick, onJoin, onLeave, compact = false }: 
           </div>
         )}
 
-        {/* Titulo */}
         <h3 className="text-lg text-white mb-2 leading-tight">{event.title}</h3>
 
-        {/* Descricao truncada */}
         {event.description && (
           <p className="text-sm text-white/50 mb-4 line-clamp-2">{event.description}</p>
         )}
 
-        {/* Meta info */}
         <div className="space-y-2 mb-4">
           <div className="flex items-center gap-2 text-sm text-white/60">
             <Clock className="h-4 w-4 text-[#81D8D0]" />
             <span>{getTimeLabel()}</span>
             {event.ends_at && (
               <span className="text-white/30">
-                — {format(new Date(event.ends_at), 'HH:mm')}
+                — {fmtTime.format(new Date(event.ends_at))}
               </span>
             )}
           </div>
@@ -149,7 +156,6 @@ export function EventCard({ event, onClick, onJoin, onLeave, compact = false }: 
           </div>
         </div>
 
-        {/* Footer: Host + Acoes */}
         <div className="flex items-center justify-between pt-3 border-t border-white/10">
           <div className="flex items-center gap-2">
             <UserAvatar name={event.host_name} photoUrl={event.host_photo} size="sm" />
@@ -183,8 +189,6 @@ export function EventCard({ event, onClick, onJoin, onLeave, compact = false }: 
     </motion.div>
   );
 }
-
-// ─── Sub-components ──────────────────────────────────────────
 
 function TypeBadge({ type, ritualType, color }: { type: string; ritualType: string | null; color: string }) {
   const label = type === 'ritual' && ritualType

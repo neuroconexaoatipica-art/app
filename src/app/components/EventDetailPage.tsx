@@ -1,5 +1,3 @@
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale/pt-BR";
 import { useState } from "react";
 import { motion } from "motion/react";
 import { ArrowLeft, Calendar, Clock, MapPin, Video, Users, Flame, Star, CheckCircle, ExternalLink, Trash2, Edit3, XCircle } from "lucide-react";
@@ -8,6 +6,10 @@ import { useEventDetail } from "../../lib/useEvents";
 import { useEvents } from "../../lib/useEvents";
 import { EVENT_TYPE_LABELS, RITUAL_TYPE_LABELS, RITUAL_TYPE_DESCRIPTIONS, LOCATION_TYPE_LABELS, EVENT_STATUS_LABELS } from "../../lib/useEvents";
 import { useProfileContext, isSuperAdmin, hasModAccess } from "../../lib";
+
+// Formatacao de data nativa (sem date-fns)
+const fmtFull = new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "long" });
+const fmtTime = new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" });
 
 interface EventDetailPageProps {
   eventId: string;
@@ -39,22 +41,14 @@ export function EventDetailPage({ eventId, onBack, onNavigateToProfile }: EventD
 
   const handleJoin = async () => {
     setActionLoading(true);
-    try {
-      await joinEvent(eventId);
-      await refresh();
-    } finally {
-      setActionLoading(false);
-    }
+    try { await joinEvent(eventId); await refresh(); }
+    finally { setActionLoading(false); }
   };
 
   const handleLeave = async () => {
     setActionLoading(true);
-    try {
-      await leaveEvent(eventId);
-      await refresh();
-    } finally {
-      setActionLoading(false);
-    }
+    try { await leaveEvent(eventId); await refresh(); }
+    finally { setActionLoading(false); }
   };
 
   const handleDelete = async () => {
@@ -95,7 +89,6 @@ export function EventDetailPage({ eventId, onBack, onNavigateToProfile }: EventD
 
   return (
     <div className="min-h-screen bg-black">
-      {/* Header */}
       <div className="w-full bg-[#35363A] border-b border-white/10 sticky top-0 z-40">
         <div className="mx-auto max-w-[800px] px-6 py-4">
           <div className="flex items-center justify-between">
@@ -106,7 +99,6 @@ export function EventDetailPage({ eventId, onBack, onNavigateToProfile }: EventD
               <ArrowLeft className="h-5 w-5" />
               <span>Eventos</span>
             </button>
-
             {canManage && (
               <button
                 onClick={handleDelete}
@@ -123,23 +115,15 @@ export function EventDetailPage({ eventId, onBack, onNavigateToProfile }: EventD
 
       <div className="mx-auto max-w-[800px] px-6 py-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-
-          {/* Cover */}
           {event.cover_image_url && (
-            <div
-              className="h-48 rounded-2xl bg-cover bg-center mb-6 relative overflow-hidden"
-              style={{ backgroundImage: `url(${event.cover_image_url})` }}
-            >
+            <div className="h-48 rounded-2xl bg-cover bg-center mb-6 relative overflow-hidden"
+              style={{ backgroundImage: `url(${event.cover_image_url})` }}>
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
             </div>
           )}
 
-          {/* Status badge bar */}
           <div className="flex items-center gap-2 mb-4 flex-wrap">
-            <span
-              className="px-3 py-1 rounded-full text-xs"
-              style={{ backgroundColor: `${typeColor}30`, color: typeColor }}
-            >
+            <span className="px-3 py-1 rounded-full text-xs" style={{ backgroundColor: `${typeColor}30`, color: typeColor }}>
               {isRitual && <Flame className="inline h-3 w-3 mr-1 -mt-0.5" />}
               {isRitual && event.ritual_type
                 ? RITUAL_TYPE_LABELS[event.ritual_type]
@@ -147,15 +131,11 @@ export function EventDetailPage({ eventId, onBack, onNavigateToProfile }: EventD
             </span>
 
             <span className={`px-3 py-1 rounded-full text-xs ${
-              event.status === 'live'
-                ? 'bg-[#C8102E] text-white animate-pulse'
-                : event.status === 'published'
-                ? 'bg-[#81D8D0]/20 text-[#81D8D0]'
-                : event.status === 'completed'
-                ? 'bg-white/10 text-white/40'
-                : event.status === 'cancelled'
-                ? 'bg-[#C8102E]/20 text-[#C8102E]'
-                : 'bg-white/10 text-white/40'
+              event.status === 'live' ? 'bg-[#C8102E] text-white animate-pulse' :
+              event.status === 'published' ? 'bg-[#81D8D0]/20 text-[#81D8D0]' :
+              event.status === 'completed' ? 'bg-white/10 text-white/40' :
+              event.status === 'cancelled' ? 'bg-[#C8102E]/20 text-[#C8102E]' :
+              'bg-white/10 text-white/40'
             }`}>
               {EVENT_STATUS_LABELS[event.status]}
             </span>
@@ -167,10 +147,8 @@ export function EventDetailPage({ eventId, onBack, onNavigateToProfile }: EventD
             )}
           </div>
 
-          {/* Titulo */}
           <h1 className="text-3xl text-white mb-4 leading-tight">{event.title}</h1>
 
-          {/* Host */}
           <div className="flex items-center gap-3 mb-6">
             <UserAvatar
               name={event.host_name}
@@ -184,17 +162,16 @@ export function EventDetailPage({ eventId, onBack, onNavigateToProfile }: EventD
             </div>
           </div>
 
-          {/* Info grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
             <div className="flex items-center gap-3 p-4 bg-white/3 border border-white/10 rounded-xl">
               <Calendar className="h-5 w-5 text-[#81D8D0]" />
               <div>
                 <p className="text-sm text-white">
-                  {format(startDate, "EEEE, d 'de' MMMM", { locale: ptBR })}
+                  {fmtFull.format(startDate)}
                 </p>
                 <p className="text-xs text-white/40">
-                  {format(startDate, 'HH:mm')}
-                  {event.ends_at && ` — ${format(new Date(event.ends_at), 'HH:mm')}`}
+                  {fmtTime.format(startDate)}
+                  {event.ends_at && ` — ${fmtTime.format(new Date(event.ends_at))}`}
                 </p>
               </div>
             </div>
@@ -208,12 +185,8 @@ export function EventDetailPage({ eventId, onBack, onNavigateToProfile }: EventD
               <div>
                 <p className="text-sm text-white">{LOCATION_TYPE_LABELS[event.location_type]}</p>
                 {event.location_url && (
-                  <a
-                    href={event.location_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs text-[#81D8D0] hover:underline flex items-center gap-1"
-                  >
+                  <a href={event.location_url} target="_blank" rel="noopener noreferrer"
+                    className="text-xs text-[#81D8D0] hover:underline flex items-center gap-1">
                     Acessar sala <ExternalLink className="h-3 w-3" />
                   </a>
                 )}
@@ -236,7 +209,6 @@ export function EventDetailPage({ eventId, onBack, onNavigateToProfile }: EventD
             </div>
           </div>
 
-          {/* Botao de acao */}
           {!isPast && event.status !== 'cancelled' && (
             <div className="mb-8">
               {event.is_participating ? (
@@ -263,7 +235,6 @@ export function EventDetailPage({ eventId, onBack, onNavigateToProfile }: EventD
             </div>
           )}
 
-          {/* Descricao */}
           {event.description && (
             <div className="mb-8">
               <h3 className="text-sm text-white/40 uppercase tracking-wide mb-3">Sobre o evento</h3>
@@ -273,7 +244,6 @@ export function EventDetailPage({ eventId, onBack, onNavigateToProfile }: EventD
             </div>
           )}
 
-          {/* Ritual context */}
           {isRitual && event.ritual_type && (
             <div className="mb-8">
               <h3 className="text-sm text-white/40 uppercase tracking-wide mb-3 flex items-center gap-2">
@@ -288,12 +258,10 @@ export function EventDetailPage({ eventId, onBack, onNavigateToProfile }: EventD
             </div>
           )}
 
-          {/* Participantes */}
           <div>
             <h3 className="text-sm text-white/40 uppercase tracking-wide mb-3">
               Participantes ({participants.length})
             </h3>
-
             {participants.length === 0 ? (
               <p className="text-sm text-white/30 p-4 bg-white/3 border border-white/10 rounded-xl text-center">
                 Nenhum participante ainda. Seja o primeiro!
@@ -318,7 +286,6 @@ export function EventDetailPage({ eventId, onBack, onNavigateToProfile }: EventD
               </div>
             )}
           </div>
-
         </motion.div>
       </div>
     </div>
