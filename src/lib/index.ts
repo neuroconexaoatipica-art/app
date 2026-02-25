@@ -1,9 +1,6 @@
 export { supabase, TIMEOUTS, SUPABASE_STORAGE_KEY } from './supabase';
 export type { User, Community, Post, LiveInterest, Comment, UserRole } from './supabase';
 export type { Event, EventParticipant, EventType, RitualType, EventStatus, LocationType, ParticipantStatus } from './supabase';
-// useProfile e useCommunities são LEGADOS — usar useProfileContext e useCommunitiesContext
-// export { useProfile } from './useProfile';
-// export { useCommunities } from './useCommunities';
 export { usePosts } from './usePosts';
 export type { PostWithAuthor } from './usePosts';
 export { useComments } from './useComments';
