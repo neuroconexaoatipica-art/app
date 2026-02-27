@@ -59,6 +59,7 @@ const EventDetailPage = lazy(() => import("./components/EventDetailPage").then(m
 const MessagesPage = lazy(() => import("./components/MessagesPage").then(m => ({ default: m.MessagesPage })));
 const AdminDashboard = lazy(() => import("./components/AdminDashboard").then(m => ({ default: m.AdminDashboard })));
 const RoadmapPage = lazy(() => import("./components/RoadmapPage").then(m => ({ default: m.RoadmapPage })));
+// DeployBridge removido — só existe no ambiente Figma Make, não vai pra produção
 const WaitingRoom = lazy(() => import("./components/WaitingRoom").then(m => ({ default: m.WaitingRoom })));
 const SettingsPage = lazy(() => import("./components/SettingsPage").then(m => ({ default: m.SettingsPage })));
 const FoundersRoom = lazy(() => import("./components/FoundersRoom").then(m => ({ default: m.FoundersRoom })));
@@ -528,11 +529,30 @@ function RoadmapRoute() {
 
 // ── Deploy Bridge ──
 function DeployRoute() {
-  return (
-    <Suspense fallback={<div className="min-h-screen bg-black text-white flex items-center justify-center">Carregando Deploy Bridge...</div>}>
-      <DeployBridge />
-    </Suspense>
-  );
+  const [DeployComp, setDeployComp] = useState<React.ComponentType | null>(null);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    // Caminho em variável para que Rollup NÃO tente resolver estaticamente
+    const mod = "./components/DeployBridge";
+    import(/* @vite-ignore */ mod)
+      .then((m) => setDeployComp(() => m.DeployBridge))
+      .catch(() => setFailed(true));
+  }, []);
+
+  if (failed) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <p className="text-white/50 text-sm">Deploy Bridge — disponivel apenas no ambiente Figma Make.</p>
+      </div>
+    );
+  }
+
+  if (!DeployComp) {
+    return <LazyFallback />;
+  }
+
+  return <DeployComp />;
 }
 
 // ── Settings ──

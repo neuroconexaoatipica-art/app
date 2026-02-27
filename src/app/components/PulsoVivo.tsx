@@ -104,13 +104,13 @@ const FALLBACK_AVISOS = [
 
 const DESAFIO_DA_SEMANA = {
   titulo: "Desafio da Semana",
-  texto: "Conte para alguem — pessoalmente — algo que voce costuma guardar so pra si. Nao precisa ser nada enorme. Precisa ser verdadeiro.",
-  tag: "Semana 1 — Fundacao",
+  texto: "Esta semana o desafio e simples. Em que parte da sua vida voce esta performando forca... quando na verdade esta precisando ser honesto(a)?\n\nNao e para se expor.\nE para perceber.",
+  tag: "Semana 2 — Honestidade",
 };
 
 const PERGUNTA_DO_DIA = {
   titulo: "Pergunta do Dia",
-  texto: "O que voce faria diferente na sua vida se soubesse que ninguem ia te julgar?",
+  texto: "Se voce pudesse parar de performar por 24h, o que mudaria?",
   autor: "Mila",
 };
 
