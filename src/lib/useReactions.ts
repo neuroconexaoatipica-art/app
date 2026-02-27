@@ -21,13 +21,13 @@ export function useReactions(postId: string) {
   const [counts, setCounts] = useState<ReactionCount[]>([]);
   const [myReaction, setMyReaction] = useState<ReactionType | null>(null);
   const [totalCount, setTotalCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
 
   const load = useCallback(async () => {
     if (!postId) return;
     try {
       const { data: { user } } = await supabase.auth.getUser();
 
-      // Buscar todas as reacoes deste post
       const { data, error } = await supabase
         .from('reactions')
         .select('reaction_type, user_id')
@@ -35,7 +35,6 @@ export function useReactions(postId: string) {
 
       if (error) throw error;
 
-      // Contar por tipo
       const countMap: Record<string, number> = {};
       let myR: ReactionType | null = null;
       (data || []).forEach(r => {
@@ -49,6 +48,8 @@ export function useReactions(postId: string) {
       setTotalCount((data || []).length);
     } catch (err) {
       console.error('[useReactions] Erro:', err);
+    } finally {
+      setIsLoading(false);
     }
   }, [postId]);
 
@@ -60,15 +61,12 @@ export function useReactions(postId: string) {
       if (!user) return;
 
       if (myReaction === type) {
-        // Remover reacao
         await supabase.from('reactions').delete().eq('user_id', user.id).eq('post_id', postId);
         setMyReaction(null);
       } else if (myReaction) {
-        // Trocar tipo
         await supabase.from('reactions').update({ reaction_type: type }).eq('user_id', user.id).eq('post_id', postId);
         setMyReaction(type);
       } else {
-        // Nova reacao
         await supabase.from('reactions').insert({ user_id: user.id, post_id: postId, reaction_type: type });
         setMyReaction(type);
       }
@@ -78,5 +76,5 @@ export function useReactions(postId: string) {
     }
   }, [myReaction, postId, load]);
 
-  return { counts, myReaction, totalCount, toggleReaction };
+  return { reactions: counts, userReaction: myReaction, totalCount, toggleReaction, isLoading };
 }
